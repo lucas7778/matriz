@@ -1,0 +1,36 @@
+pipeline {
+  agent{
+    node{
+      label 'master'
+    }
+  } 
+  stages {
+    stage('Initialize') {
+      steps {
+          script{
+            def dockerHome = tool 'myDocker'
+            env.PATH = "${dockerHome}/bin${env.PATH}"
+
+          }
+      }
+    }
+    stage('build') {
+      agent { docker { image 'python:3.8-slim' }}
+        steps {
+          sh 'pip install numpy && python app.py'
+        }
+      }
+    
+    stage('Docker Image') {
+      steps{
+        sh 'docker build -t matriz .'
+      }
+    }
+    stage('RUN Image / Container Creation'){
+      steps{
+        sh 'docker run -p 50000:5000 -d --name matriz_container personal-python-test'
+      }
+    }   
+    
+  }
+}
